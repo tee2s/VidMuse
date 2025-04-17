@@ -2,10 +2,30 @@
 name = "vidmuse"
 version = "0.1.0"
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "audiocraft==1.2.0",
+    "blis<1.2",
+    "chardet==5.2.0",
+    "decord==0.6.0",
+    "ffmpeg<5",
+    "ftfy==6.3.1",
+    "h5py==3.13.0",
+    "imageio==2.37.0",
+    "moviepy==1.0.3",
+    "numpy==1.25.0",
+    "pydub>=0.25.1",
+    "setuptools>=78.1.0",
+    "tensorboard>=2.19.0",
+    "timm==1.0.14",
+    "wandb==0.19.7",
+    "webdataset==0.2.100",
+    "wheel>=0.45.1",
+]
 
 [dependency-groups]
 dev = [
+    "ipykernel>=6.29.5",
+    "ipywidgets>=8.1.5",
     "vidmuse",
 ]
 
