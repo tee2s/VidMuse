@@ -109,8 +109,8 @@ schedule:
 
 slurm:
   gpus: 1                         # --gres=gpu:1
-  mem_per_gpu: 32.0               # --mem=32G  (per GPU)
-  time: 600                       # --time=10:00:00 → 10 h = 600 min
+  mem_per_gpu: 32                 # --mem=32G  this RAM not GPU memory
+  time: 600                       # --time=10:00:00 10 h = 600 min
   cpus_per_gpu: 4                 # -n 4 tasks / 1 GPU
   cpus_per_task: null             # (let SlurmConfig infer)
   partition: "a100-gpu,l40-gpu"   # --partition
