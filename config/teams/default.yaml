@@ -4,29 +4,10 @@ default:
     global: debug
     team: debug
   reference_dir: ./output
-  slurm:
-    gpus:           1             # --gres=gpu:1
-    mem_per_gpu:    32            # total mem = gpus × 32 GB → --mem=32G
-    time:           36000         # in seconds → 10h
-    partition:      a100-gpu,l40-gpu
-    constraint:     
-    comment:        
-    setup:
-      - source ~/.bashrc
-      - echo "FFMPEG: $(which ffmpeg)"
-      - echo "$(ffmpeg -version)"
-      - cd /work/users/t/i/tis/V2Music
-      - source .venv/bin/activate
-    exclude:        
-    #array:          "0-5"         # job array indices
-    qos:            gpu_access
-    mail_type:      ALL
-    mail_user:      tis@cs.unc.edu
-    output:         /…/out/encode_job_%A_%a.out
-    error:          /…/err/encode_job_%A_%a.err
 darwin:  # if we detect we are on a Mac, then most likely we are doing unit testing etc.
   dora_dir: ./output/VidMuse
   partitions:
     global: debug
     team: debug
   reference_dir: ./output
+

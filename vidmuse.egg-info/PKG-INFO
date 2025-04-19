@@ -25,6 +25,7 @@ Requires-Dist: moviepy==1.0.3
 Requires-Dist: numpy==1.25.0
 Requires-Dist: pydub>=0.25.1
 Requires-Dist: setuptools>=78.1.0
+Requires-Dist: submitit>=1.5.2
 Requires-Dist: tensorboard>=2.19.0
 Requires-Dist: timm==1.0.14
 Requires-Dist: wandb==0.19.7
