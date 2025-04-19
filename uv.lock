@@ -180,6 +180,21 @@ wheels = [
 ]
 
 [[package]]
+name = "audioseal"
+version = "0.1.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "julius" },
+    { name = "numpy" },
+    { name = "omegaconf" },
+    { name = "torch" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ca/e1/5a4548b076fe54250a0678c09b8d0c868d2d9aeff8354c8b752be74ec001/audioseal-0.1.4.tar.gz", hash = "sha256:28580a640a47f445347a76ce9f02e639fae781535e5bfbde24baa4767ce58317", size = 1866433 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/20/b8bf24be673e159e99b2c3e2df128a19f2f217862118becb14db7bb559ba/audioseal-0.1.4-py3-none-any.whl", hash = "sha256:e1a36741fadeae3b71d2891ed0639a262f0924b6615be737e005dc629f470fae", size = 21220 },
+]
+
+[[package]]
 name = "av"
 version = "14.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4549,7 +4564,7 @@ wheels = [
 [[package]]
 name = "vidmuse"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "audiocraft" },
     { name = "blis" },
@@ -4570,16 +4585,19 @@ dependencies = [
     { name = "wheel" },
 ]
 
-[package.dev-dependencies]
+[package.optional-dependencies]
 dev = [
     { name = "ipykernel" },
     { name = "ipywidgets" },
-    { name = "vidmuse" },
+]
+wm = [
+    { name = "audioseal" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "audiocraft", specifier = "==1.2.0" },
+    { name = "audioseal", marker = "extra == 'wm'" },
     { name = "blis", specifier = "<1.2" },
     { name = "chardet", specifier = "==5.2.0" },
     { name = "decord", specifier = "==0.6.0" },
@@ -4587,23 +4605,20 @@ requires-dist = [
     { name = "ftfy", specifier = "==6.3.1" },
     { name = "h5py", specifier = "==3.13.0" },
     { name = "imageio", specifier = "==2.37.0" },
+    { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29.5" },
+    { name = "ipywidgets", marker = "extra == 'dev'", specifier = ">=8.1.5" },
     { name = "moviepy", specifier = "==1.0.3" },
     { name = "numpy", specifier = "==1.25.0" },
     { name = "pydub", specifier = ">=0.25.1" },
     { name = "setuptools", specifier = ">=78.1.0" },
     { name = "tensorboard", specifier = ">=2.19.0" },
     { name = "timm", specifier = "==1.0.14" },
+    { name = "vidmuse", marker = "extra == 'dev'", editable = "." },
     { name = "wandb", specifier = "==0.19.7" },
     { name = "webdataset", specifier = "==0.2.100" },
     { name = "wheel", specifier = ">=0.45.1" },
 ]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "ipykernel", specifier = ">=6.29.5" },
-    { name = "ipywidgets", specifier = ">=8.1.5" },
-    { name = "vidmuse", virtual = "." },
-]
+provides-extras = ["dev", "wm"]
 
 [[package]]
 name = "wandb"

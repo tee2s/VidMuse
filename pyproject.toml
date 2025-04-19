@@ -1,33 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "vidmuse"
 version = "0.1.0"
+description = "Audio generation research library for PyTorch"
+readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.9"
 dependencies = [
-    "audiocraft==1.2.0",
-    "blis<1.2",
-    "chardet==5.2.0",
-    "decord==0.6.0",
-    "ffmpeg<5",
-    "ftfy==6.3.1",
-    "h5py==3.13.0",
-    "imageio==2.37.0",
-    "moviepy==1.0.3",
-    "numpy==1.25.0",
-    "pydub>=0.25.1",
-    "setuptools>=78.1.0",
-    "tensorboard>=2.19.0",
-    "timm==1.0.14",
-    "wandb==0.19.7",
-    "webdataset==0.2.100",
-    "wheel>=0.45.1",
+  "audiocraft==1.2.0",
+  "blis<1.2",
+  "chardet==5.2.0",
+  "decord==0.6.0",
+  "ffmpeg<5",
+  "ftfy==6.3.1",
+  "h5py==3.13.0",
+  "imageio==2.37.0",
+  "moviepy==1.0.3",
+  "numpy==1.25.0",
+  "pydub>=0.25.1",
+  "setuptools>=78.1.0",
+  "tensorboard>=2.19.0",
+  "timm==1.0.14",
+  "wandb==0.19.7",
+  "webdataset==0.2.100",
+  "wheel>=0.45.1",
 ]
+authors = [
+  { name = "Titus", email = "tis@cs.unc.edu" }
+]
+license = { text = "MIT License" }
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Multimedia :: Sound/Audio",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+urls = { "Homepage" = "https://github.com/tisunc" }
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
-    "ipykernel>=6.29.5",
-    "ipywidgets>=8.1.5",
-    "vidmuse",
+  "ipykernel>=6.29.5",
+  "ipywidgets>=8.1.5",
+  "vidmuse",
+]
+wm = [
+  "audioseal",
 ]
 
 [tool.uv.sources]
 vidmuse = { workspace = true }
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["audiocraft*"]
+
+[tool.setuptools.package-data]
+"audiocraft" = ["py.typed"]
