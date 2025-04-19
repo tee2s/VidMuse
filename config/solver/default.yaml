@@ -113,6 +113,8 @@ slurm:
   time: 600                       # --time=10:00:00 10 h = 600 min
   cpus_per_gpu: 4                 # -n 4 tasks / 1 GPU
   cpus_per_task: null             # (let SlurmConfig infer)
+  exclude: null                   # comma‑separated nodes to exclude
+  #wckey: null                     # workload characteristic key tag
   partition: "a100-gpu,l40-gpu"   # --partition
   setup:
     - source ~/.bashrc
