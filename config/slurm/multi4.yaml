@@ -10,6 +10,6 @@ setup:
   - source ~/.bashrc
   - echo "FFMPEG located at $(which ffmpeg)"
   - echo "$(ffmpeg -version)"
-  - cd /work/users/t/i/tis/demucs
+  - cd /work/users/t/i/tis/VidMuse
   - source .venv/bin/activate
 qos: "gpu_access"               # --qos
