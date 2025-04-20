@@ -1,9 +1,9 @@
 # @package __global__
 
 defaults:
+  - slurm: default
   - /solver/default
   - /conditioner: none
-  - slurm: default
   - _self_
   - /solver/VidMuse/evaluation: none
   - override /dset: audio/default
