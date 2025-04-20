@@ -3,10 +3,11 @@
 defaults:
   - /solver/default
   - /conditioner: none
+  - slurm: default
   - _self_
   - /solver/VidMuse/evaluation: none
   - override /dset: audio/default
-  - slurm: default
+
 
 autocast: true
 autocast_dtype: float16
