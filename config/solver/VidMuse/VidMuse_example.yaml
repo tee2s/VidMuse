@@ -8,6 +8,7 @@ defaults:
   - /model: lm/musicgen_lm
   - override /dset: audio/default
   - _self_
+  - slurm: default
 
 autocast: true
 autocast_dtype: float16
