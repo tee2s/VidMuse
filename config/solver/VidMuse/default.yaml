@@ -1,7 +1,7 @@
 # @package __global__
 
 defaults:
-  - slurm: default
+#  - slurm: default
   - /solver/default
   - /conditioner: none
   - _self_
