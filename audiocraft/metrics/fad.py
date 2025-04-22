@@ -157,7 +157,10 @@ class FrechetAudioDistanceMetric(torchmetrics.Metric):
         self.python_path = os.environ.get('TF_PYTHON_EXE') or 'python'
         logger.info("Python exe for TF is  %s", self.python_path)
         if 'TF_LIBRARY_PATH' in os.environ:
-            self.tf_env['LD_LIBRARY_PATH'] = os.environ['TF_LIBRARY_PATH']
+            #self.tf_env['LD_LIBRARY_PATH'] = os.environ['TF_LIBRARY_PATH']
+            self.tf_env['LD_LIBRARY_PATH'] = f"/nas/longleaf/rhel8/apps/cuda/11.8/lib64:{os.environ['TF_LIBRARY_PATH']}"
+            self.tf_env['PATH'] = f"/nas/longleaf/rhel8/apps/cuda/11.8/bin:{os.environ.get('PATH', '')}"
+            self.tf_env['CUDA_HOME'] = "/nas/longleaf/rhel8/apps/cuda/11.8"
         if 'TF_FORCE_GPU_ALLOW_GROWTH' in os.environ:
             self.tf_env['TF_FORCE_GPU_ALLOW_GROWTH'] = os.environ['TF_FORCE_GPU_ALLOW_GROWTH']
         logger.info("Env for TF is %r", self.tf_env)

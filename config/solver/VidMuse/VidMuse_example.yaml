@@ -24,7 +24,7 @@ deadlock:
   use: true  # deadlock detection
 
 dataset:
-  batch_size: 1
+  batch_size: 192
   segment_duration: 30
   sample_on_weight: false  # Uniform sampling all the way
   sample_on_duration: false  # Uniform sampling all the way
@@ -47,10 +47,10 @@ datasource:
   max_sample_rate: 44100
   max_channels: 2
 
-  train: egs/V2M/example
-  valid: egs/V2M/example
-  evaluate: egs/V2M/example
-  generate: egs/V2M/example
+  train: egs/V2M20K/train
+  valid: egs/V2M20K/valid
+  evaluate: egs/V2M20K/eval
+  generate: egs/V2M20K/eval
 
 generate:
   lm:

@@ -2,7 +2,8 @@
 
 # Setup for execute only on musiccaps for audio generation
 # evaluation with objective metrics
-# execute_only=evaluate
+
+execute_only: evaluate
 
 dataset:
   max_audio_duration: null
