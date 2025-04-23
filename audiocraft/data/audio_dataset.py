@@ -450,11 +450,13 @@ class AudioDataset:
                     with h5py.File(f'{self.global_feature_path}/{ytb_id}.h5', 'r') as file:
                         data = file['global_video_array'][:]
                         global_video = np.array(data)
-                    local_video = video_read_local(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration)
-                else:
+                  #  local_video = video_read_local(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration)
+                    local_video = video_read_local(file_meta.video_path,  target_fps=self.video_fps)
 
-                    local_video, global_video = video_read_global(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration, global_mode=self.global_mode, global_num_frames=self.global_num_frames)
-                                              
+                else:
+                    #local_video, global_video = video_read_global(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration, global_mode=self.global_mode, global_num_frames=self.global_num_frames)
+                    local_video, global_video = video_read_global(file_meta.video_path,  target_fps=self.video_fps, global_mode=self.global_mode, global_num_frames=self.global_num_frames)
+                        
             else: # local only
                 video = video_read_local(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration)
 
@@ -541,7 +543,7 @@ class AudioDataset:
             else:
                 return out, [video]
 
-    def collater(self, samples):
+    def collater2(self, samples):
         """The collater function has to be provided to the dataloader
         if AudioDataset has return_info=True in order to properly collate
         the samples of a batch.
@@ -552,7 +554,8 @@ class AudioDataset:
         # In this case the audio reaching the collater is of variable length as segment_duration=None.
         to_pad = self.segment_duration is None and self.pad
         if to_pad:
-            max_len = max([wav.shape[-1] for wav, _ in samples])
+            #max_len = max([wav.shape[-1] for wav, _ in samples])
+            max_len = max([wav.shape[-1] for wav, *rest in samples])
 
             def _pad_wav(wav):
                 return F.pad(wav, (0, max_len - wav.shape[-1]))
@@ -604,6 +607,64 @@ class AudioDataset:
             if to_pad:
                 samples = [_pad_wav(s) for s in samples]
             return torch.stack(samples)
+
+    def collater(self, samples):
+        """The collater function has to be provided to the dataloader
+        if AudioDataset has return_info=True in order to properly collate
+        the samples of a batch.
+        """
+        if self.segment_duration is None and len(samples) > 1:
+            assert self.pad, "Must allow padding when batching examples of different durations."
+
+        # decide whether we need to pad to the max length
+        to_pad = (self.segment_duration is None) and self.pad
+        if to_pad:
+            # compute max length over all wavs
+            max_len = max(wav.shape[-1] for wav, *rest in samples)
+            def _pad_wav(wav):
+                return F.pad(wav, (0, max_len - wav.shape[-1]))
+
+        if self.return_info:
+            # sanity-check output of __getitem__
+            assert len(samples[0]) == 3
+            assert isinstance(samples[0][0], torch.Tensor)
+            assert isinstance(samples[0][1], list)
+            assert isinstance(samples[0][2], SegmentInfo)
+
+            # unpack
+            wavs         = [wav       for wav, _, _    in samples]
+            video_lists  = [vlist     for _, vlist, _ in samples]
+            segment_infos= [copy.deepcopy(info) for _, _, info in samples]
+
+            # apply padding (and update total_frames)
+            if to_pad:
+                for i in range(len(wavs)):
+                    wavs[i] = _pad_wav(wavs[i])
+                    segment_infos[i].total_frames = max_len
+
+            # now we can safely stack
+            wav = torch.stack(wavs)
+
+            # handle 1 or 2 videos per sample
+            if len(video_lists[0]) == 1:
+                videos = [vlist[0] for vlist in video_lists]
+                video = torch.stack(videos)
+                return wav, [video], segment_infos
+
+            elif len(video_lists[0]) == 2:
+                local_videos  = [vlist[0] for vlist in video_lists]
+                global_videos = [vlist[1] for vlist in video_lists]
+                local_video  = torch.stack(local_videos)
+                global_video = torch.stack(global_videos)
+                return wav, [local_video, global_video], segment_infos
+
+        else:
+            # simple case: just a list of wav tensors
+            wavs = [s for s in samples]
+            if to_pad:
+                wavs = [_pad_wav(w) for w in wavs]
+            return torch.stack(wavs)
+
 
     def _filter_duration(self, meta: tp.List[AudioMeta]) -> tp.List[AudioMeta]:
         """Filters out audio files with audio durations that will not allow to sample examples from them."""

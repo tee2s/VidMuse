@@ -5,6 +5,7 @@ setup.cfg
 setup.py
 audiocraft/__init__.py
 audiocraft/environment.py
+audiocraft/read_video.py
 audiocraft/train.py
 audiocraft/adversarial/__init__.py
 audiocraft/adversarial/losses.py

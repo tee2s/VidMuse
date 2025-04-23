@@ -152,7 +152,8 @@ class AudioCraftEnvironment:
             Path: Resolved path.
         """
         path = str(path)
-
+        print(cls.get_reference_dir())
+        print(path)
         if path.startswith("//reference"):
             reference_dir = cls.get_reference_dir()
             logger.warn(f"Reference directory: {reference_dir}")

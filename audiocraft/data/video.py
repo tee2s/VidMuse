@@ -20,6 +20,7 @@ def adjust_video_duration(video_tensor, duration, target_fps):
     return video_tensor
 
 def video_read_local(filepath, seek_time=0., duration=-1, target_fps=2):
+    print(filepath)
     vr = VideoReader(filepath, ctx=cpu(0))
     fps = vr.get_avg_fps()
 

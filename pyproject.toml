@@ -16,6 +16,7 @@ dependencies = [
   "ffmpeg<5",
   "ftfy==6.3.1",
   "h5py==3.13.0",
+  "hear21passt",
   "imageio==2.37.0",
   "moviepy==1.0.3",
   "numpy==1.25.0",
@@ -51,6 +52,7 @@ wm = [
 
 [tool.uv.sources]
 vidmuse = { workspace = true }
+hear21passt = { git = "https://github.com/kkoutini/passt_hear21.git" }
 
 [tool.setuptools]
 include-package-data = true

@@ -25,9 +25,11 @@ deadlock:
 
 dataset:
   batch_size: 192
-  segment_duration: 30
+  segment_duration: 29
   sample_on_weight: false  # Uniform sampling all the way
   sample_on_duration: false  # Uniform sampling all the way
+  evaluate:
+    num_samples: 1 # eval sample number
   valid:
     num_samples: 1 # valid sample number
   generate:
@@ -47,10 +49,10 @@ datasource:
   max_sample_rate: 44100
   max_channels: 2
 
-  train: egs/V2M20K/train
-  valid: egs/V2M20K/valid
-  evaluate: egs/V2M20K/eval
-  generate: egs/V2M20K/eval
+  train: egs/V2M20K/train/test
+  valid: egs/V2M20K/valid/test
+  evaluate: egs/V2M20K/eval/test
+  generate: egs/V2M20K/eval/test
 
 generate:
   lm:

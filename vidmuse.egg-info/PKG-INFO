@@ -20,6 +20,7 @@ Requires-Dist: decord==0.6.0
 Requires-Dist: ffmpeg<5
 Requires-Dist: ftfy==6.3.1
 Requires-Dist: h5py==3.13.0
+Requires-Dist: hear21passt
 Requires-Dist: imageio==2.37.0
 Requires-Dist: moviepy==1.0.3
 Requires-Dist: numpy==1.25.0

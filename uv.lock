@@ -1214,6 +1214,15 @@ wheels = [
 ]
 
 [[package]]
+name = "hear21passt"
+version = "0.0.26"
+source = { git = "https://github.com/kkoutini/passt_hear21.git#5f1cce6a54b88faf0abad82ed428355e7931213a" }
+dependencies = [
+    { name = "timm" },
+    { name = "torchaudio" },
+]
+
+[[package]]
 name = "httpcore"
 version = "1.0.7"
 source = { registry = "https://pypi.org/simple" }
@@ -4573,6 +4582,7 @@ dependencies = [
     { name = "ffmpeg" },
     { name = "ftfy" },
     { name = "h5py" },
+    { name = "hear21passt" },
     { name = "imageio" },
     { name = "moviepy" },
     { name = "numpy" },
@@ -4605,6 +4615,7 @@ requires-dist = [
     { name = "ffmpeg", specifier = "<5" },
     { name = "ftfy", specifier = "==6.3.1" },
     { name = "h5py", specifier = "==3.13.0" },
+    { name = "hear21passt", git = "https://github.com/kkoutini/passt_hear21.git" },
     { name = "imageio", specifier = "==2.37.0" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29.5" },
     { name = "ipywidgets", marker = "extra == 'dev'", specifier = ">=8.1.5" },

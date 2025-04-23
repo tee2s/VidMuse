@@ -6,12 +6,12 @@
 execute_only: evaluate
 
 dataset:
-  max_audio_duration: null
+  max_audio_duration: 33
   # ensure the proper values are broadcasted here for evaluate
   evaluate:
     min_audio_duration: 1.  # some metrics requires a minimum audio length
     max_audio_duration: null  # all samples from musiccaps should be < 20s
-    num_samples: null
+    num_samples: 1
     segment_duration: null
   generate:
     min_audio_duration: 1.
@@ -22,4 +22,4 @@ evaluate:
   metrics:
     fad: true
     kld: true
-    text_consistency: true
+    text_consistency: false
