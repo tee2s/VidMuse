@@ -21,4 +21,5 @@ evaluate:
   metrics:
     fad: true
     kld: true
+    chroma_cosine: true
     text_consistency: false

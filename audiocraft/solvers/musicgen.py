@@ -715,8 +715,18 @@ class MusicGenSolver(base.StandardSolver):
                     # restore chroma conditioner's eval chroma wavs
                     if eval_chroma_wavs is not None:
                         self.model.condition_provider.conditioners['self_wav'].reset_eval_wavs(eval_chroma_wavs)
-                print(f"Successfully Processed Batch {idx}")
-                self.logger.info(f"Successfully Processed Batch {idx}")
+                
+                intermediate = {}
+                if fad is not None:
+                    intermediate['fad'] = fad.compute()
+                if kldiv is not None:
+                    intermediate.update(kldiv.compute())
+                if text_consistency is not None:
+                    intermediate['text_consistency'] = text_consistency.compute()
+                if chroma_cosine is not None:
+                    intermediate['chroma_cosine'] = chroma_cosine.compute()
+                self.logger.info(f"[Batch {idx} with Rank {flashy.distrib.rank()}] Metrics so far: {intermediate}")
+                
 
             flashy.distrib.barrier()
             if fad is not None:
