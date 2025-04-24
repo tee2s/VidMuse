@@ -18,7 +18,6 @@ import omegaconf
 
 from .utils.cluster import _guess_cluster_type
 
-
 logger = logging.getLogger(__name__)
 
 

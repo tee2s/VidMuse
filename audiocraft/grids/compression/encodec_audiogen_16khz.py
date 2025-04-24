@@ -13,7 +13,7 @@ This grid shows how to train the new AudioGen EnCodec model at 16 kHz.
 """
 
 from ._explorers import CompressionExplorer
-from ...environment import AudioCraftEnvironment
+from ....environment import AudioCraftEnvironment
 
 
 @CompressionExplorer

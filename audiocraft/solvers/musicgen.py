@@ -130,7 +130,9 @@ class MusicGenSolver(base.StandardSolver):
                          self.compression_model.num_codebooks, self.compression_model.cardinality,
                          self.compression_model.frame_rate)
         # instantiate LM model
-        self.model: models.LMModel = models.builders.get_lm_model(self.cfg).to(self.device)
+        print(self.cfg)
+        #self.model: models.LMModel = models.builders.get_lm_model(self.cfg).to(self.device)
+        self.model: models.LMModel = models.loaders.load_lm_model(self.cfg.continue_from, device=self.device)
         if self.cfg.fsdp.use:
             assert not self.cfg.autocast, "Cannot use autocast with fsdp"
             self.model = self.wrap_with_fsdp(self.model)
@@ -180,6 +182,7 @@ class MusicGenSolver(base.StandardSolver):
 
     def load_from_pretrained(self, name: str):
         # TODO: support native HF versions of MusicGen.
+        print("started_loading from pretrained")
         lm_pkg = models.loaders.load_lm_model_ckpt(name)
         state: dict = {
             'best_state': {
@@ -670,7 +673,7 @@ class MusicGenSolver(base.StandardSolver):
             self.logger.info(f"Computing evaluation metrics on {len(dataset)} samples")
 
             for idx, batch in enumerate(lp):
-                audio, meta = batch
+                audio, _ , meta = batch
                 assert all([self.cfg.sample_rate == m.sample_rate for m in meta])
 
                 target_duration = audio.shape[-1] / self.cfg.sample_rate
@@ -712,6 +715,8 @@ class MusicGenSolver(base.StandardSolver):
                     # restore chroma conditioner's eval chroma wavs
                     if eval_chroma_wavs is not None:
                         self.model.condition_provider.conditioners['self_wav'].reset_eval_wavs(eval_chroma_wavs)
+                print(f"Successfully Processed Batch {idx}")
+                self.logger.info(f"Successfully Processed Batch {idx}")
 
             flashy.distrib.barrier()
             if fad is not None:

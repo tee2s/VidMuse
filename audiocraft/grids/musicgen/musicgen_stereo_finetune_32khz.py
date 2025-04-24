@@ -6,7 +6,7 @@
 
 from pathlib import Path
 from ._explorers import LMExplorer
-from ...environment import AudioCraftEnvironment
+from ....environment import AudioCraftEnvironment
 
 
 @LMExplorer

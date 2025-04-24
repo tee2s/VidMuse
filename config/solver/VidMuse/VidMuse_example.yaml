@@ -24,12 +24,13 @@ deadlock:
   use: true  # deadlock detection
 
 dataset:
-  batch_size: 192
+  batch_size: 8
+  num_workers: 1
   segment_duration: 29
   sample_on_weight: false  # Uniform sampling all the way
   sample_on_duration: false  # Uniform sampling all the way
   evaluate:
-    num_samples: 1 # eval sample number
+    num_samples: 4000 # eval sample number
   valid:
     num_samples: 1 # valid sample number
   generate:
@@ -51,7 +52,7 @@ datasource:
 
   train: egs/V2M20K/train/test
   valid: egs/V2M20K/valid/test
-  evaluate: egs/V2M20K/eval/test
+  evaluate: egs/V2M20K/eval
   generate: egs/V2M20K/eval/test
 
 generate:

@@ -22,6 +22,8 @@ Requires-Dist: ftfy==6.3.1
 Requires-Dist: h5py==3.13.0
 Requires-Dist: hear21passt
 Requires-Dist: imageio==2.37.0
+Requires-Dist: ipykernel>=6.29.5
+Requires-Dist: ipywidgets>=8.1.5
 Requires-Dist: moviepy==1.0.3
 Requires-Dist: numpy==1.25.0
 Requires-Dist: pydub>=0.25.1

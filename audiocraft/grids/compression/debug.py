@@ -15,7 +15,7 @@ Learn more about dora grids: https://github.com/facebookresearch/dora
 """
 
 from ._explorers import CompressionExplorer
-from ...environment import AudioCraftEnvironment
+from ....environment import AudioCraftEnvironment
 
 
 @CompressionExplorer

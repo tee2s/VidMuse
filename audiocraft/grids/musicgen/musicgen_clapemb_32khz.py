@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from ._explorers import LMExplorer
-from ...environment import AudioCraftEnvironment
+from ....environment import AudioCraftEnvironment
 
 
 @LMExplorer

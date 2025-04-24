@@ -19,7 +19,7 @@ the objective metrics activated in this grid. Refer to the README for more infor
 import os
 
 from ._explorers import GenerationEvalExplorer
-from ...environment import AudioCraftEnvironment
+from ....environment import AudioCraftEnvironment
 from ... import train
 
 

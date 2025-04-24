@@ -13,7 +13,7 @@ This grid shows how to train a base causal EnCodec model at 24 kHz.
 """
 
 from ._explorers import CompressionExplorer
-from ...environment import AudioCraftEnvironment
+from ....environment import AudioCraftEnvironment
 
 
 @CompressionExplorer

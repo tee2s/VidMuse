@@ -18,6 +18,8 @@ dependencies = [
   "h5py==3.13.0",
   "hear21passt",
   "imageio==2.37.0",
+  "ipykernel>=6.29.5",
+  "ipywidgets>=8.1.5",
   "moviepy==1.0.3",
   "numpy==1.25.0",
   "pydub>=0.25.1",

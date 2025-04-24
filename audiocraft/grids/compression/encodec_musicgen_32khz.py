@@ -13,7 +13,7 @@ This grid shows how to train a MusicGen EnCodec model at 32 kHz.
 """
 
 from ._explorers import CompressionExplorer
-from ...environment import AudioCraftEnvironment
+from ....environment import AudioCraftEnvironment
 
 
 @CompressionExplorer

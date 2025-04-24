@@ -149,7 +149,8 @@ def main(cfg):
         assert cfg.execute_inplace or cfg.continue_from is not None, \
             "Please explicitly specify the checkpoint to continue from with continue_from=<sig_or_path> " + \
             "when running with execute_only or set execute_inplace to True."
-        solver.restore(replay_metrics=False)  # load checkpoint
+        #solver.restore(replay_metrics=False)  # load checkpoint
+        solver.load_from_pretrained(cfg.continue_from)
         solver.run_one_stage(cfg.execute_only)
         return
 

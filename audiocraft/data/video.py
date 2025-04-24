@@ -23,7 +23,7 @@ def video_read_local(filepath, seek_time=0., duration=-1, target_fps=2):
     print(filepath)
     vr = VideoReader(filepath, ctx=cpu(0))
     fps = vr.get_avg_fps()
-
+    duration = 29
     if duration > 0:
         total_frames_to_read = target_fps * duration
         frame_interval = int(math.ceil(fps / target_fps))
@@ -50,7 +50,8 @@ def video_read_global(filepath, seek_time=0., duration=-1, target_fps=2, global_
     vr = VideoReader(filepath, ctx=cpu(0))
     fps = vr.get_avg_fps()
     frame_count = len(vr)
-
+    #print(f"frame_count: {frame_count}, fps: {fps}")
+    duration = 29
     if duration > 0:
         total_frames_to_read = target_fps * duration
         frame_interval = int(math.ceil(fps / target_fps))
@@ -60,6 +61,7 @@ def video_read_global(filepath, seek_time=0., duration=-1, target_fps=2, global_
     else:
         frame_ids = list(range(0, frame_count, int(math.ceil(fps / target_fps))))
 
+    #print(f"num frame_ids: {len(frame_ids)}")
     local_frames = vr.get_batch(frame_ids)
     local_frames = torch.from_numpy(local_frames.asnumpy()).permute(0, 3, 1, 2)  # [N, H, W, C] -> [N, C, H, W]
     
