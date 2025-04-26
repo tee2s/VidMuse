@@ -22,6 +22,7 @@ audiocraft/data/info_audio_dataset.py
 audiocraft/data/music_dataset.py
 audiocraft/data/sound_dataset.py
 audiocraft/data/video.py
+audiocraft/data/video2.py
 audiocraft/data/zip.py
 audiocraft/grids/__init__.py
 audiocraft/grids/_base_explorers.py

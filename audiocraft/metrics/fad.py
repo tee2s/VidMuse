@@ -151,7 +151,8 @@ class FrechetAudioDistanceMetric(torchmetrics.Metric):
         self.model_path = AudioCraftEnvironment.resolve_reference_path(model_path)
         assert Path(self.model_path).exists(), f"Could not find provided model checkpoint path at: {self.model_path}"
         self.format = format
-        self.batch_size = batch_size
+        #self.batch_size = batch_size
+        self.batch_size = 4
         self.bin = bin
         self.tf_env = {"PYTHONPATH": str(self.bin)}
         self.python_path = os.environ.get('TF_PYTHON_EXE') or 'python'

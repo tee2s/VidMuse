@@ -347,6 +347,7 @@ class LMModel(StreamingModule):
         local_image = local_video_tensor.to(dtype=torch.float32)
         global_image = global_video_tensor.to(dtype=torch.float32)
 
+        # Frame is folded into batch dimension (no cross frame attention)
         local_batch_size, _, local_time_length, _, _ = local_image.size()
         local_image = einops.rearrange(local_image, 'b c t h w -> (b t) c h w')
 
@@ -362,10 +363,27 @@ class LMModel(StreamingModule):
         global_video_inputs = self.processor(images=global_image.float(), return_tensors="pt")
         global_pixel_values = global_video_inputs['pixel_values'].to(device)
 
+        #b: batch size 8 
+        #t: number of frames (2fps * 29s = 58)
+        #q: Number of patches + cls token 224/32 x 224/32 + 1 = 7 x 7 + 1 = 50
+        #h: hidden size of the visual encoder each patch gets encoded to = 768
+        #c: number of channels 3
+        #ht: height of the video frame 224
+        #w: width of the video frame 224
+
+        #INPUT: local video tensors [b, c, t, ht, w]  (8, 3, 58, 224, 224)
+        #FLatten for Batch Processing [b, c, t, ht, ww] -> [b*t, c, ht, w] (464, 3, 224, 224)
+        #Encode video tensors using CLIP: [b*t, c, ht, w] -> [b*t, q, h] (464, 50, 768)
+        #Add positional embedding to the encoded video tensors [b*t, q, h] + [1, 50, h] -> [b*t, q, h] 
+        #Pass through the temporal transformer [b*t, q, h] -> [b*t, q, h] (Each patch of a frame attends to all other patches of the same frame)
+        #Reshape to [b*t, q, h] -> [b, t, q, h] and then concatenate all patches along temporal dim [b, t*q, h] (8, 58, 50, 768) -> (8, 2900, 768)
+
         if self.visual_encoder == 'clip':
             with torch.no_grad():
                 local_video_hidden = self.visual_encoder_model(pixel_values=local_pixel_values).last_hidden_state
             local_video_hidden += self.local_pos_embedding
+            # this only runs spatial attention not temporal attention
+            # this is just a second spatial attention head on top of CLIPs output (also spatial attention)
             local_video_hidden = local_temporal_transformer(local_video_hidden)
             local_video_hidden = einops.rearrange(
                 local_video_hidden, '(b t) q h -> b (t q) h',
@@ -381,7 +399,12 @@ class LMModel(StreamingModule):
                 b=global_batch_size, t=global_time_length
             )
 
+        # Only here the spatiotemporal attention is applied
+        # Each local video frame attends to all other global video frames
+        # Outputs [b, t_local*q, h] where each of  t_local*q attends to all other t_global*q (8, 2900, 768)
         video_hidden = self.multi_head_cross_attention(local_video_hidden, global_video_hidden)
+
+        # Linear Projection from [b, t_local*q, h] -> [b, t_local*q, dim] 8, 2900, 128)
         video_emb = self.visual_feature_proj(video_hidden)
 
         return video_emb

@@ -11,6 +11,7 @@ ipykernel>=6.29.5
 ipywidgets>=8.1.5
 moviepy==1.0.3
 numpy==1.25.0
+opencv-python>=4.8.1.78
 pydub>=0.25.1
 setuptools>=78.1.0
 submitit>=1.5.2

@@ -26,6 +26,7 @@ Requires-Dist: ipykernel>=6.29.5
 Requires-Dist: ipywidgets>=8.1.5
 Requires-Dist: moviepy==1.0.3
 Requires-Dist: numpy==1.25.0
+Requires-Dist: opencv-python>=4.8.1.78
 Requires-Dist: pydub>=0.25.1
 Requires-Dist: setuptools>=78.1.0
 Requires-Dist: submitit>=1.5.2

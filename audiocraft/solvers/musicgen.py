@@ -680,6 +680,7 @@ class MusicGenSolver(base.StandardSolver):
                 if self.cfg.evaluate.fixed_generation_duration:
                     target_duration = self.cfg.evaluate.fixed_generation_duration
 
+                self.logger.info(f"[Start Processing Batch {idx} with Rank {flashy.distrib.rank()}]")
                 gen_outputs = self.run_generate_step(
                     batch, gen_duration=target_duration,
                     **self.generation_params
@@ -716,18 +717,22 @@ class MusicGenSolver(base.StandardSolver):
                     if eval_chroma_wavs is not None:
                         self.model.condition_provider.conditioners['self_wav'].reset_eval_wavs(eval_chroma_wavs)
                 
-                intermediate = {}
-                if fad is not None:
-                    intermediate['fad'] = fad.compute()
-                if kldiv is not None:
-                    intermediate.update(kldiv.compute())
-                if text_consistency is not None:
-                    intermediate['text_consistency'] = text_consistency.compute()
-                if chroma_cosine is not None:
-                    intermediate['chroma_cosine'] = chroma_cosine.compute()
-                self.logger.info(f"[Batch {idx} with Rank {flashy.distrib.rank()}] Metrics so far: {intermediate}")
-                
-
+                if idx % 3 == 0:
+                    flashy.distrib.barrier()  
+                    self.logger.info(f"Entering metrics block on rank {flashy.distrib.rank()}")
+                    intermediate: dict = {}
+                    if fad is not None:
+                        intermediate['fad'] = fad.compute()
+                    if kldiv is not None:
+                        intermediate.update(kldiv.compute())
+                    if text_consistency is not None:
+                        intermediate['text_consistency'] = text_consistency.compute()
+                    if chroma_cosine is not None:
+                        intermediate['chroma_cosine'] = chroma_cosine.compute()
+                    intermediate = average(intermediate)
+                    intermediate = flashy.distrib.average_metrics(intermediate, idx + 1)
+                    self.logger.info(f"[Batch {idx+1} with Rank {flashy.distrib.rank()}] Metrics so far: {intermediate}")
+            
             flashy.distrib.barrier()
             if fad is not None:
                 metrics['fad'] = fad.compute()
