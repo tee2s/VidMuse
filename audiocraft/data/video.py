@@ -262,5 +262,6 @@ def video_read_with_flow(
 
     # 7) To torch [1, duration, 224, 224]
     flow_tensor = torch.from_numpy(avg_flows).unsqueeze(0)
-
+    print("video_tensor shape", video_tensor.shape)
+    print("flow_tensor shape", flow_tensor.shape)
     return video_tensor, flow_tensor

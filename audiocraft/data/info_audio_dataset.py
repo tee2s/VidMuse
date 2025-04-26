@@ -66,6 +66,7 @@ class InfoAudioDataset(AudioDataset):
             return wav
         wav, video_list,  meta = super().__getitem__(index)
         assert isinstance(video_list, list)
+        print(f"Called getitem of InfoAudioDataset")
         return wav, video_list, AudioInfo(**meta.to_dict())
 
 

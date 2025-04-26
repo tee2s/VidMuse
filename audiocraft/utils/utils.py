@@ -68,7 +68,7 @@ def get_loader(dataset, num_samples: tp.Optional[int], batch_size: int,
     """
     if num_samples is not None:
         dataset = random_subset(dataset, num_samples, seed)
-
+    print(f"Using {num_workers} and {batch_size} for data loading")
     dataloader = flashy.distrib.loader(
         dataset,
         batch_size=batch_size,

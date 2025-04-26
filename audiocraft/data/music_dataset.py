@@ -218,6 +218,7 @@ class MusicDataset(InfoAudioDataset):
             self.paraphraser = Paraphraser(paraphrase_source, paraphrase_p)
 
     def __getitem__(self, index):
+        # calls the InfoAudioDataset __getitem__ method
         wav, video_list, info = super().__getitem__(index)
         assert isinstance(video_list, list)
         
@@ -283,6 +284,7 @@ class MusicDataset(InfoAudioDataset):
                     sample_rate=[info.sample_rate], path=[info.meta.path], seek_time=[info.seek_time])
                 music_info.joint_embed[att] = joint_embed_cond
 
+            print(f"Called getitem in MusicDataset")
             return wav, [local_video, global_video], music_info
         
         

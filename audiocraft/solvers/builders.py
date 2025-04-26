@@ -369,7 +369,7 @@ def get_audio_datasets(cfg: omegaconf.DictConfig,
         return_info = kwargs.pop('return_info')
         batch_size = kwargs.pop('batch_size', None)
         num_workers = kwargs.pop('num_workers')
-
+        print(f"num_workers in builder: {num_workers}")
         if dataset_type == DatasetType.MUSIC:
             dataset = data.music_dataset.MusicDataset.from_meta(path, **kwargs)
         elif dataset_type == DatasetType.SOUND:

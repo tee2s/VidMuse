@@ -18,13 +18,13 @@ from pathlib import Path
 import random
 import sys
 import typing as tp
-
+from typing import List, Tuple, Union
 import torch
 import torch.nn.functional as F
 import numpy as np
 
 from .audio import audio_read, audio_info
-from .video import video_read_local, video_read_global
+from .video import video_read_local, video_read_global, video_read_with_flow
 from .audio_utils import convert_audio
 from .zip import PathInZip
 import h5py
@@ -103,7 +103,7 @@ DEFAULT_EXTS = ['.wav', '.mp3', '.flac', '.ogg', '.m4a']
 logger = logging.getLogger(__name__)
 
 
-def _get_audio_meta(file_path: str, minimal: bool = True) -> AudioMeta:
+def _g_meta(file_path: str, minimal: bool = True) -> AudioMeta:
     """AudioMeta from a path to an audio file.
 
     Args:
@@ -434,6 +434,7 @@ class AudioDataset:
             assert self.segment_duration is not None
             n_frames = int(self.sample_rate * self.segment_duration)
             return torch.zeros(self.channels, n_frames), self.sample_rate
+        
 
     def __getitem__(self, index: int) -> tp.Union[torch.Tensor, tp.Tuple[torch.Tensor, SegmentInfo]]:
         if self.segment_duration is None:
@@ -451,14 +452,17 @@ class AudioDataset:
                         data = file['global_video_array'][:]
                         global_video = np.array(data)
                   #  local_video = video_read_local(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration)
-                    local_video = video_read_local(file_meta.video_path,  target_fps=self.video_fps)
+                   # local_video = video_read_local(file_meta.video_path,  target_fps=self.video_fps)
+                    raise Exception("Not Supported Loading")
 
                 else:
                     #local_video, global_video = video_read_global(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration, global_mode=self.global_mode, global_num_frames=self.global_num_frames)
-                    local_video, global_video = video_read_global(file_meta.video_path,  target_fps=self.video_fps, global_mode=self.global_mode, global_num_frames=self.global_num_frames)
+                    #local_video, global_video = video_read_global(file_meta.video_path,  target_fps=self.video_fps, global_mode=self.global_mode, global_num_frames=self.global_num_frames)
+                    video_tensor, flow_tensor = video_read_with_flow(file_meta.video_path,  target_fps=self.video_fps)
                         
             else: # local only
-                video = video_read_local(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration)
+                #video = video_read_local(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration)
+                video_tensor, _ = video_read_with_flow(file_meta.video_path,  target_fps=self.video_fps)
 
             segment_info = SegmentInfo(file_meta, seek_time=0., n_frames=n_frames, total_frames=n_frames,
                                        sample_rate=self.sample_rate, channels=out.shape[0])
@@ -506,16 +510,23 @@ class AudioDataset:
                             indices = np.linspace(0, global_video.shape[1]-1, num=self.global_num_frames, endpoint=True).round().astype(int)
                             global_video = global_video[:,indices,:,:]
                             global_video = torch.from_numpy(global_video)
-                            local_video = video_read_local(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration)
+                            #local_video = video_read_local(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration)
+                            raise Exception("Not Supported Loading")
+
                         else:
-                            local_video, global_video = video_read_global(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration, global_mode=self.global_mode, global_num_frames=self.global_num_frames)
-                        assert global_video.shape[1]==self.global_num_frames
+                            #local_video, global_video = video_read_global(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration, global_mode=self.global_mode, global_num_frames=self.global_num_frames)
+                            print(file_meta.video_path)
+                            video_tensor, flow_tensor = video_read_with_flow(file_meta.video_path, seek_time=seek_time, duration=self.segment_duration, target_fps=self.video_fps)
+                            print("loading from here")
+                        #assert global_video.shape[1]==self.global_num_frames
                         
-                        n_frames_video = local_video.shape[1]
+                        #n_frames_video = local_video.shape[1]
 
                     else: # local only
-                        video = video_read_local(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration)
-                        n_frames_video = video.shape[1]
+                        #video = video_read_local(file_meta.video_path,  target_fps=self.video_fps, seek_time=seek_time, duration=self.segment_duration)
+                        video_tensor, _ = video_read_with_flow(file_meta.video_path, seek_time=seek_time, duration=self.segment_duration, target_fps=self.video_fps)
+
+                        #n_frames_video = video_tensor.shape[1]
 
                     target_frames_video = int(self.segment_duration * self.video_fps)
 
@@ -533,15 +544,15 @@ class AudioDataset:
         if self.if_add_gobal:
             if self.return_info:
                 # Returns the wav and additional information on the wave segment
-                return out, [local_video, global_video], segment_info
+                return out, [video_tensor, flow_tensor], segment_info
             else:
-                return out, [local_video, global_video]
+                return out, [video_tensor, flow_tensor]
         else:
             if self.return_info:
                 # Returns the wav and additional information on the wave segment
-                return out, [video], segment_info
+                return out, [video_tensor], segment_info
             else:
-                return out, [video]
+                return out, [video_tensor]
 
     def collater2(self, samples):
         """The collater function has to be provided to the dataloader
