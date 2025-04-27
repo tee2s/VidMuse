@@ -34,7 +34,7 @@ dataset:
   valid:
     num_samples: 1899
   evaluate:
-    num_samples: 3798
+    num_samples: 0 #3798
   generate:
     num_samples: 0
 
@@ -65,11 +65,11 @@ generate:
   every: null
 
 evaluate:
-  every: 0
+  every: 1 #oterhwise no wandb metrics
   metrics:
-    fad: true
-    kld: true
-    chroma_cosine: true
+    fad: false
+    kld: false
+    chroma_cosine: false
 
 optim:
   epochs: 10
@@ -94,7 +94,7 @@ logging:
 wandb:
   with_media_logging: true
   project: VideoMusicGeneration
-  name: full_training
+  name: training
   group: training 
 
 schedule:
