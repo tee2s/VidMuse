@@ -548,7 +548,7 @@ class StandardSolver(ABC, flashy.BaseSolver):
                 self.deadlock_detect.update('ema')
                 self.profiler.step()
                 instant_metrics = instant_average(metrics)
-                # print(f'metrics:{metrics}')
+                print(f'metrics:{metrics}')
                 # print(f'instant_metrics:{instant_metrics}')
                 # exit()
 

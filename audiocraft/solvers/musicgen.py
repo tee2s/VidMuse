@@ -131,8 +131,8 @@ class MusicGenSolver(base.StandardSolver):
                          self.compression_model.frame_rate)
         # instantiate LM model
         print(self.cfg)
-        #self.model: models.LMModel = models.builders.get_lm_model(self.cfg).to(self.device)
-        self.model: models.LMModel = models.loaders.load_lm_model(self.cfg.continue_from, device=self.device)
+        self.model: models.LMModel = models.builders.get_lm_model(self.cfg).to(self.device)
+        #self.model: models.LMModel = models.loaders.load_lm_model(self.cfg.continue_from, device=self.device)
         if self.cfg.fsdp.use:
             assert not self.cfg.autocast, "Cannot use autocast with fsdp"
             self.model = self.wrap_with_fsdp(self.model)

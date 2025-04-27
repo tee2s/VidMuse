@@ -108,15 +108,15 @@ schedule:
     warmup_init_lr: 0.0
     
 slurm:
-  gpus: 2
+  gpus: 8
   qos: "gpu_access"                             
-  mem_per_gpu: 32                
-  time: 600                       
+  mem_per_gpu: 64      #gpu x mem = total memory         
+  time: 10080                       
   cpus_per_gpu: 4                 
   #cpus_per_task: 8             
   one_task_per_node: false         
   exclude: null                   
-  partition: "l40-gpu"  
+  partition: "l40-gpu" 
   setup:
     - source ~/.bashrc
     - echo "FFMPEG located at $(which ffmpeg)"

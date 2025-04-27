@@ -29,14 +29,12 @@ dataset:
   segment_duration: 29
   sample_on_weight: false  # Uniform sampling all the way
   sample_on_duration: false  # Uniform sampling all the way
-  train:
-    num_samples: 2 # train sample number
   evaluate:
-    num_samples: 2 # eval sample number
+    num_samples: 4000 # eval sample number
   valid:
-    num_samples: 2 # valid sample number
+    num_samples: 3000 # valid sample number
   generate:
-    num_samples: 2
+    num_samples: 1
 
 video:
   visual_encoder: clip # videomae
@@ -52,10 +50,10 @@ datasource:
   max_sample_rate: 44100
   max_channels: 2
 
-  train: egs/V2M20K/train
-  valid: egs/V2M20K/valid
+  train: egs/V2M20K/train/test
+  valid: egs/V2M20K/valid/test
   evaluate: egs/V2M20K/eval
-  generate: egs/V2M20K/eval
+  generate: egs/V2M20K/eval/test
 
 generate:
   lm:
@@ -68,10 +66,6 @@ generate:
 evaluate:
   every: 
     1
-  metrics:
-    fad: true
-    kld: true
-    chroma_cosine: true
 
 optim:
   epochs: 10
@@ -90,14 +84,6 @@ optim:
 
 logging:
   log_tensorboard: true
-  log_updates: 10
-  log_wandb: true
- 
-wandb:
-  with_media_logging: true
-  project: VideoMusicGeneration
-  name: default
-  group: default 
 
 schedule:
   lr_scheduler: cosine
@@ -111,4 +97,3 @@ checkpoint:
   save_every: 1
   keep_last: 1
   keep_every_states: null
-

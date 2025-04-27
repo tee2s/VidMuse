@@ -24,19 +24,19 @@ deadlock:
   use: true  # deadlock detection
 
 dataset:
-  batch_size: 8
-  num_workers: 1
+  batch_size: 64
+  num_workers: 3
   segment_duration: 29
   sample_on_weight: false  # Uniform sampling all the way
   sample_on_duration: false  # Uniform sampling all the way
   train:
-    num_samples: 2 # train sample number
-  evaluate:
-    num_samples: 2 # eval sample number
+    num_samples: 13293
   valid:
-    num_samples: 2 # valid sample number
+    num_samples: 1899
+  evaluate:
+    num_samples: 3798
   generate:
-    num_samples: 2
+    num_samples: 0
 
 video:
   visual_encoder: clip # videomae
@@ -62,12 +62,10 @@ generate:
     use_sampling: true
     top_k: 250
     top_p: 0.0
-  every: 
-    100
+  every: null
 
 evaluate:
-  every: 
-    1
+  every: 0
   metrics:
     fad: true
     kld: true
@@ -75,7 +73,7 @@ evaluate:
 
 optim:
   epochs: 10
-  updates_per_epoch: 10
+  updates_per_epoch: 208  # ceil(13293/batch_size)
   optimizer: adamw
   lr: 35e-6
   ema:
@@ -96,8 +94,8 @@ logging:
 wandb:
   with_media_logging: true
   project: VideoMusicGeneration
-  name: default
-  group: default 
+  name: full_training
+  group: training 
 
 schedule:
   lr_scheduler: cosine
@@ -112,3 +110,19 @@ checkpoint:
   keep_last: 1
   keep_every_states: null
 
+slurm:
+  gpus: 8
+  qos: "gpu_access"                             
+  mem_per_gpu: 64      #gpu x mem = total memory         
+  time: 10080                       
+  cpus_per_gpu: 4                 
+  #cpus_per_task: 8             
+  one_task_per_node: false         
+  exclude: null                   
+  partition: "l40-gpu" 
+  setup:
+    - source ~/.bashrc
+    - echo "FFMPEG located at $(which ffmpeg)"
+    - echo "$(ffmpeg -version)"
+    - cd /work/users/t/i/tis/VidMuse
+    - source .venv/bin/activate

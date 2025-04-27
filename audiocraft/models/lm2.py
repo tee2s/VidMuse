@@ -230,8 +230,7 @@ class LMModel(StreamingModule):
                  zero_bias_init: bool = False, cfg_dropout: float = 0, cfg_coef: float = 1.0,
                  attribute_dropout: tp.Dict[str, tp.Dict[str, float]] = {}, two_step_cfg: bool = False,
                  depth=2,
-                 visual_embed_dim=768,
-                 pooling_type='cls',
+                 temporal_dim=768,
                  dim_head=64,
                  **kwargs):
         super().__init__()
@@ -241,8 +240,8 @@ class LMModel(StreamingModule):
         self.condition_provider = condition_provider
         self.visual_encoder = visual_encoder
         self.if_add_gobal = if_add_gobal
-        self.visual_embed_dim = visual_embed_dim
-        self.pooling_type = pooling_type
+        self.temporal_dim = temporal_dim
+        
         self.fuser = fuser
         self.card = card
         embed_dim = self.card + 1
@@ -255,7 +254,9 @@ class LMModel(StreamingModule):
             kwargs['activation'] = get_activation_fn(kwargs['activation'])
         self.transformer = StreamingTransformer(
             d_model=dim, num_heads=num_heads, dim_feedforward=int(hidden_scale * dim),
-            norm=norm, norm_first=norm_first, **kwargs)   
+            norm=norm, norm_first=norm_first, **kwargs)
+        
+        
         self.out_norm: tp.Optional[nn.Module] = None
         if norm_first:
             self.out_norm = create_norm_fn(norm, dim)
@@ -264,47 +265,34 @@ class LMModel(StreamingModule):
         self._fsdp: tp.Optional[nn.Module]
         self.__dict__['_fsdp'] = None
         
-
-        # Define frozen visual encoder
         if self.visual_encoder == 'clip':
             self.visual_encoder_model = CLIPVisionModelWithProjection.from_pretrained("openai/clip-vit-base-patch32")
             self.processor = AutoProcessor.from_pretrained("openai/clip-vit-base-patch32")
-            self.visual_encoder_model = self.visual_encoder_model.eval()
-            for param in self.visual_encoder_model.parameters():
-                param.requires_grad = False
+                             
         else:
             print(f'the encoder now is:{self.visual_encoder}')
             print(f'please input the right video encoder.')
             exit()
         
-        # Learn per frame normalization of raw flow magnitudes
-        self.flow_norm = nn.InstanceNorm2d(1, affine=True)
-        
-        # Define the learnable embeddings for flow features (same embedding logic as CLIP)
-        # Same as flattening each patch and project to 768 dimension space of CLIP features 
-        self.flow_patch_embed = nn.Conv2d(
-            in_channels=1, # flow map only has 1 channel (magnitude of optical flow per pixel, could be extended to direction of motion)
-            out_channels=self.visual_embed_dim, 
-            kernel_size=32,
-            stride=32,
-            padding=0,
-            bias=True
-        )
+        if self.visual_encoder == 'clip':
+            temporal_dim = 768 
+            self.local_pos_embedding = nn.Parameter(torch.randn(1, 50, temporal_dim))
+            self.visual_encoder_model = self.visual_encoder_model.eval()
+            for param in self.visual_encoder_model.parameters():
+                param.requires_grad = False
 
-        # Define the learnable postional embeddings for visual features and flow features
-        self.visual_pos_embedding = nn.Parameter(torch.randn(1, 50, visual_embed_dim))
-        self.flow_pos_embedding = nn.Parameter(torch.randn(1, 49, visual_embed_dim)) # No CLS token
+        self.local_temporal_transformer = Transformer(temporal_dim, depth, num_heads, dim_head, temporal_dim*hidden_scale, 0.) # [768, 4, 16, 64, 768*4]
 
-        # Transformer for contextualized visual and flow features
-        self.visual_spatial_transformer = Transformer(visual_embed_dim, depth, num_heads, dim_head, embed_dim*hidden_scale, 0.) # [768, 4, 16, 64, 768*4]
-        self.flow_spatial_transformer = Transformer(visual_embed_dim, depth, num_heads, dim_head, embed_dim*hidden_scale, 0.) # [768, 4, 16, 64, 768*4]
+        if self.if_add_gobal:
+            if self.visual_encoder == 'clip':
+                self.global_pos_embedding = nn.Parameter(torch.randn(1, 50, temporal_dim))
+
+            self.global_temporal_transformer = Transformer(temporal_dim, depth, num_heads, dim_head, temporal_dim*hidden_scale, 0.) # [768, 4, 16, 64, 768*4]
+            
+            cross_attention_num_heads = 3 # MultiHeadCrossAttention
+            self.multi_head_cross_attention = MultiHeadCrossAttention(temporal_dim, cross_attention_num_heads)
         
-        # Transformer for temporal cross attention of visual and flow features on a frame-level 
-        cross_attention_num_heads = 3 # MultiHeadCrossAttention
-        self.multi_head_cross_attention = MultiHeadCrossAttention(visual_embed_dim, cross_attention_num_heads)
-        
-        # Linear projection to map to MusicGen input dimension
-        self.visual_feature_proj = nn.Linear(visual_embed_dim, dim)                       
+        self.visual_feature_proj = nn.Linear(temporal_dim, dim)                       
 
 
     def _init_weights(self, weight_init: tp.Optional[str], depthwise_init: tp.Optional[str], zero_bias_init: bool):
@@ -350,6 +338,78 @@ class LMModel(StreamingModule):
     def num_codebooks(self) -> int:
         return self.n_q
 
+    def compute_video_emb(self, video_tensor_list: tp.List, device: str) -> torch.Tensor:
+        assert isinstance(video_tensor_list, list)
+        assert self.if_add_gobal
+        assert len(video_tensor_list) == 2
+
+        [local_video_tensor, global_video_tensor] = video_tensor_list
+        local_image = local_video_tensor.to(dtype=torch.float32)
+        global_image = global_video_tensor.to(dtype=torch.float32)
+
+        # Frame is folded into batch dimension (no cross frame attention)
+        local_batch_size, _, local_time_length, _, _ = local_image.size()
+        local_image = einops.rearrange(local_image, 'b c t h w -> (b t) c h w')
+
+        global_batch_size, _, global_time_length, _, _ = global_image.size()
+        global_image = einops.rearrange(global_image, 'b c t h w -> (b t) c h w')
+
+        local_temporal_transformer = self.local_temporal_transformer
+        global_temporal_transformer = self.global_temporal_transformer
+
+        local_video_inputs = self.processor(images=local_image.float(), return_tensors="pt")
+        local_pixel_values = local_video_inputs['pixel_values'].to(device)
+
+        global_video_inputs = self.processor(images=global_image.float(), return_tensors="pt")
+        global_pixel_values = global_video_inputs['pixel_values'].to(device)
+
+        #b: batch size 8 
+        #t: number of frames (2fps * 29s = 58)
+        #q: Number of patches + cls token 224/32 x 224/32 + 1 = 7 x 7 + 1 = 50
+        #h: hidden size of the visual encoder each patch gets encoded to = 768
+        #c: number of channels 3
+        #ht: height of the video frame 224
+        #w: width of the video frame 224
+
+        #INPUT: local video tensors [b, c, t, ht, w]  (8, 3, 58, 224, 224)
+        #FLatten for Batch Processing [b, c, t, ht, ww] -> [b*t, c, ht, w] (464, 3, 224, 224)
+        #Encode video tensors using CLIP: [b*t, c, ht, w] -> [b*t, q, h] (464, 50, 768)
+        #Add positional embedding to the encoded video tensors [b*t, q, h] + [1, 50, h] -> [b*t, q, h] 
+        #Pass through the temporal transformer [b*t, q, h] -> [b*t, q, h] (Each patch of a frame attends to all other patches of the same frame)
+        #Reshape to [b*t, q, h] -> [b, t, q, h] and then concatenate all patches along temporal dim [b, t*q, h] (8, 58, 50, 768) -> (8, 2900, 768)
+
+        if self.visual_encoder == 'clip':
+            with torch.no_grad():
+                local_video_hidden = self.visual_encoder_model(pixel_values=local_pixel_values).last_hidden_state
+            local_video_hidden += self.local_pos_embedding
+            # this only runs spatial attention not temporal attention
+            # this is just a second spatial attention head on top of CLIPs output (also spatial attention)
+            local_video_hidden = local_temporal_transformer(local_video_hidden)
+            local_video_hidden = einops.rearrange(
+                local_video_hidden, '(b t) q h -> b (t q) h',
+                b=local_batch_size, t=local_time_length
+            )
+
+            with torch.no_grad():
+                global_video_hidden = self.visual_encoder_model(pixel_values=global_pixel_values).last_hidden_state
+            global_video_hidden += self.global_pos_embedding
+            global_video_hidden = global_temporal_transformer(global_video_hidden)
+            global_video_hidden = einops.rearrange(
+                global_video_hidden, '(b t) q h -> b (t q) h',
+                b=global_batch_size, t=global_time_length
+            )
+
+        # Only here the spatiotemporal attention is applied
+        # Each local video frame attends to all other global video frames
+        # Outputs [b, t_local*q, h] where each of  t_local*q attends to all other t_global*q (8, 2900, 768)
+        video_hidden = self.multi_head_cross_attention(local_video_hidden, global_video_hidden)
+
+        # Linear Projection from [b, t_local*q, h] -> [b, t_local*q, dim] 8, 2900, 128)
+        video_emb = self.visual_feature_proj(video_hidden)
+
+        return video_emb
+
+
     def forward(self, sequence: torch.Tensor,
                 conditions: tp.List[ConditioningAttributes],
                 video_tensor_list: tp.List,
@@ -376,62 +436,6 @@ class LMModel(StreamingModule):
             logits = logits[:, :, -S:]
         return logits  # [B, K, S, card]
 
-    def compute_video_emb(
-        self,
-        video_tensor_list: tp.List[torch.Tensor],
-        device: str
-    ) -> torch.Tensor:
-        
-        # Unpack inputs
-        visual, flow = video_tensor_list
-        B, _, T_vis, H, W = visual.size()
-        _, _, T_flow, _, _ = flow.size()
-
-        # Convert to float32
-        visual = visual.to(torch.float32)
-        flow = flow.to(torch.float32)
-
-        # -------- Video Spatial Feature Extraction --------
-        # Fold frames into batch for visual encoder
-        visual = einops.rearrange(visual, 'b c t h w -> (b t) c h w')  # [B*T_vis, 3, H, W]
-        # Enocde each frame into sequence of patch features
-        visual = self.processor(images=visual, return_tensors="pt")['pixel_values'].to(device)  # [B*T_vis, 3, H, W]
-        with torch.no_grad():
-            visual = self.visual_encoder_model(pixel_values=visual).last_hidden_state  # [B*T_vis, 50, embed_dim] 
-        visual = visual + self.visual_pos_embedding  # [B*T_vis, 50, embed_dim] + [1, 50, embed_dim]    # add pos emb per frame (broadcasting)
-        visual = self.visual_spatial_transformer(visual)  # [B*T_vis, 50, embed_dim]
-
-        # Un‐fold back into (B, T_vis, 50, embed_dim) for pooling
-        visual = einops.rearrange(visual, '(b t) q d -> b t q d', b=B, t=T_vis)  
-        # Pooling over spatial dimension q 
-        if self.pooling_type == 'cls':
-            visual = visual[:, :, 0, :]  # [B, T_vis, embed_dim]
-        else:
-            # Average pooling over patch token (ecluding CLS token)
-            visual = visual[:, :, 1:, :].mean(dim=2)  # [B, T_vis, embed_dim]
-
-        # ------ Motion (flow) Feature Extraction ------
-        # Fold flow frames into batch to apply same feature extraction for all frames
-        flow = einops.rearrange(flow, 'b c t h w -> (b t) c h w') # [B*T_flow, 1, H, W]
-        flow = self.flow_norm(flow.to(device))
-        flow = self.flow_patch_embed(flow)  # [B*T_flow, embed_dim, 7, 7]
-        flow = einops.rearrange(flow, 'n d h w -> n (h w) d') # [B*T_flow, 49, embed_dim]
-        flow = flow + self.flow_pos_embedding # [B*T_flow, 49, embed_dim] + [1, 49, embed_dim] # add pos embed to each flow map of a frame 
-        flow = self.flow_spatial_transformer(flow) # [B*T_flow, Q_f, embed_dim]
-            
-        # Un‐fold back into (B, T_flow, 49, embed_dim) for pooling
-        flow = einops.rearrange(flow, '(b t) q d -> b t q d', b=B, t=T_flow)  # [B, T_flow, Q_f, embed_dim]
-        # Avg pooling across spatial dimension q (No CLS Token)
-        flow = flow.mean(dim=2)  # [B, T_flow, embed_dim]
-        
-        print("Visual:", visual.size()) 
-        print("Flow:", flow.size()) 
-        # --------------- Cross‐Attention and Projection ------------------
-        # Fuse video & motion via cross‐attention
-        video_embed = self.multi_head_cross_attention(visual, flow)
-        video_embed  = self.visual_feature_proj(video_embed)  # [B, T_vis, dim_out]
-
-        return video_embed
 
     def compute_predictions(
             self, codes: torch.Tensor,

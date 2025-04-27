@@ -1,0 +1,10 @@
+
+logging:
+  log_updates: 1
+  log_wandb: true
+wandb:
+  with_media_logging: true
+  project: VideoMusicGeneration
+  name: default
+  group: default 
+
