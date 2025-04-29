@@ -15,7 +15,7 @@ dataset:
   generate:
     min_audio_duration: 1.
     max_audio_duration: null
-    num_samples: 500
+    num_samples: 1
 
 evaluate:
   metrics:

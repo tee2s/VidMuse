@@ -24,8 +24,8 @@ deadlock:
   use: true  # deadlock detection
 
 dataset:
-  batch_size: 64
-  num_workers: 3
+  batch_size: 32
+  num_workers: 1
   segment_duration: 29
   sample_on_weight: false  # Uniform sampling all the way
   sample_on_duration: false  # Uniform sampling all the way
@@ -34,7 +34,7 @@ dataset:
   valid:
     num_samples: 1899
   evaluate:
-    num_samples: 1 #3798
+    num_samples: 3798
   generate:
     num_samples: 1
 
@@ -67,9 +67,9 @@ generate:
 evaluate:
   every: 1 #oterhwise no wandb metrics
   metrics:
-    fad: false
-    kld: false
-    chroma_cosine: false
+    fad: true
+    kld: true
+    chroma_cosine: true
 
 optim:
   epochs: 10
@@ -111,7 +111,7 @@ checkpoint:
   keep_every_states: null
 
 slurm:
-  gpus: 8
+  gpus: 6
   qos: "gpu_access"                             
   mem_per_gpu: 64      #gpu x mem = total memory         
   time: 10080                       
