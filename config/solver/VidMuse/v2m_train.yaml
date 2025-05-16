@@ -24,7 +24,7 @@ deadlock:
   use: true  # deadlock detection
 
 dataset:
-  batch_size: 64
+  batch_size: 32
   num_workers: 3
   segment_duration: 29
   sample_on_weight: false  # Uniform sampling all the way
@@ -73,7 +73,7 @@ evaluate:
 
 optim:
   epochs: 10
-  updates_per_epoch: 208  # ceil(13293/batch_size)
+  updates_per_epoch: 416 #208 #416 #277 #208  # ceil(13293/batch_size)
   optimizer: adamw
   lr: 35e-6
   ema:
@@ -111,7 +111,7 @@ checkpoint:
   keep_every_states: null
 
 slurm:
-  gpus: 8
+  gpus: 4
   qos: "gpu_access"                             
   mem_per_gpu: 64      #gpu x mem = total memory         
   time: 10080                       

@@ -60,8 +60,9 @@ dora:
   dir: /checkpoint/${oc.env:USER}/experiments/audiocraft/outputs
   # The following entries will be ignored by dora when computing the unique XP signature.
   # Note that slurm.* and dora.* are automatically ignored.
+  # 'wandb.*'
   exclude: [
-    'device', 'wandb.*', 'tensorboard.*', 'logging.*',
+    'device', 'tensorboard.*', 'logging.*',
     'dataset.num_workers', 'eval.num_workers', 'special.*',
     'metrics.visqol.bin', 'metrics.fad.bin',
     'execute_only', 'execute_best', 'generate.every',

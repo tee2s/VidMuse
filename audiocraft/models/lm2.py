@@ -401,7 +401,7 @@ class LMModel(StreamingModule):
 
         # Only here the spatiotemporal attention is applied
         # Each local video frame attends to all other global video frames
-        # Outputs [b, t_local*q, h] where each of  t_local*q attends to all other t_global*q (8, 2900, 768)
+        # Outputs [b, t_local*q, h] where each of  t_local*q attends to all other t_global*q (8, 2900, 768) x (8, 1600, 768)
         video_hidden = self.multi_head_cross_attention(local_video_hidden, global_video_hidden)
 
         # Linear Projection from [b, t_local*q, h] -> [b, t_local*q, dim] 8, 2900, 128)

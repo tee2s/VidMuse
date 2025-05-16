@@ -94,8 +94,8 @@ logging:
 wandb:
   with_media_logging: true
   project: VideoMusicGeneration
-  name: run
-  group: training 
+  name: eval
+  group: evaluation 
 
 schedule:
   lr_scheduler: cosine
@@ -111,7 +111,7 @@ checkpoint:
   keep_every_states: null
 
 slurm:
-  gpus: 6
+  gpus: 8
   qos: "gpu_access"                             
   mem_per_gpu: 64      #gpu x mem = total memory         
   time: 10080                       

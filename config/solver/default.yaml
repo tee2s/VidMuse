@@ -108,7 +108,7 @@ schedule:
     warmup_init_lr: 0.0
     
 slurm:
-  gpus: 8
+  gpus: 4
   qos: "gpu_access"                             
   mem_per_gpu: 64      #gpu x mem = total memory         
   time: 10080                       

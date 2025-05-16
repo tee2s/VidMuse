@@ -410,27 +410,36 @@ class LMModel(StreamingModule):
             # Average pooling over patch token (ecluding CLS token)
             visual = visual[:, :, 1:, :].mean(dim=2)  # [B, T_vis, embed_dim]
 
-        # ------ Motion (flow) Feature Extraction ------
-        # Fold flow frames into batch to apply same feature extraction for all frames
-        flow = einops.rearrange(flow, 'b c t h w -> (b t) c h w') # [B*T_flow, 1, H, W]
-        flow = self.flow_norm(flow.to(device))
-        flow = self.flow_patch_embed(flow)  # [B*T_flow, embed_dim, 7, 7]
-        flow = einops.rearrange(flow, 'n d h w -> n (h w) d') # [B*T_flow, 49, embed_dim]
-        flow = flow + self.flow_pos_embedding # [B*T_flow, 49, embed_dim] + [1, 49, embed_dim] # add pos embed to each flow map of a frame 
-        flow = self.flow_spatial_transformer(flow) # [B*T_flow, Q_f, embed_dim]
-            
-        # Un‐fold back into (B, T_flow, 49, embed_dim) for pooling
-        flow = einops.rearrange(flow, '(b t) q d -> b t q d', b=B, t=T_flow)  # [B, T_flow, Q_f, embed_dim]
-        # Avg pooling across spatial dimension q (No CLS Token)
-        flow = flow.mean(dim=2)  # [B, T_flow, embed_dim]
-        
-        print("Visual:", visual.size()) 
-        print("Flow:", flow.size()) 
-        # --------------- Cross‐Attention and Projection ------------------
-        # Fuse video & motion via cross‐attention
-        video_embed = self.multi_head_cross_attention(visual, flow)
-        video_embed  = self.visual_feature_proj(video_embed)  # [B, T_vis, dim_out]
+        #For Ablation Study
+        motion_enabled = False
 
+        if motion_enabled:
+            # ------ Motion (flow) Feature Extraction ------
+            # Fold flow frames into batch to apply same feature extraction for all frames
+            flow = einops.rearrange(flow, 'b c t h w -> (b t) c h w') # [B*T_flow, 1, H, W]
+            flow = self.flow_norm(flow.to(device))
+            flow = self.flow_patch_embed(flow)  # [B*T_flow, embed_dim, 7, 7]
+            flow = einops.rearrange(flow, 'n d h w -> n (h w) d') # [B*T_flow, 49, embed_dim]
+            flow = flow + self.flow_pos_embedding # [B*T_flow, 49, embed_dim] + [1, 49, embed_dim] # add pos embed to each flow map of a frame 
+            flow = self.flow_spatial_transformer(flow) # [B*T_flow, Q_f, embed_dim]
+                
+            # Un‐fold back into (B, T_flow, 49, embed_dim) for pooling
+            flow = einops.rearrange(flow, '(b t) q d -> b t q d', b=B, t=T_flow)  # [B, T_flow, Q_f, embed_dim]
+            # Avg pooling across spatial dimension q (No CLS Token)
+            flow = flow.mean(dim=2)  # [B, T_flow, embed_dim]
+            
+            print("Visual:", visual.size()) 
+            print("Flow:", flow.size()) 
+            # --------------- Cross‐Attention and Projection ------------------
+            # Fuse video & motion via cross‐attention
+            video_embed = self.multi_head_cross_attention(visual, flow)
+            
+        else:
+            #Only condition musig generation on the visual features
+            video_embed = visual
+
+        video_embed  = self.visual_feature_proj(video_embed)  # [B, T_vis, dim_out]
+        
         return video_embed
 
     def compute_predictions(
